@@ -9,6 +9,8 @@ import { UpdateProductDto } from './dto/update-product.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Product } from './entities/product.entity'
+import { PaginationDto } from 'src/shared/dto'
+import { isUUID } from 'class-validator'
 
 @Injectable()
 export class ProductsService {
@@ -29,12 +31,17 @@ export class ProductsService {
 		}
 	}
 
-	async findAll() {
+	async findAll(paginationDto: PaginationDto) {
 		try {
-			const [products, count] = await this.productsRepository.findAndCount()
+			const { page = 1, limit = 10 } = paginationDto
+			const [products, count] = await this.productsRepository.findAndCount({
+				take: limit,
+				skip: limit * (page - 1)
+			})
 			return {
 				meta: {
-					count
+					count,
+					totalPages: Math.ceil(count / limit)
 				},
 				data: products
 			}
@@ -43,20 +50,35 @@ export class ProductsService {
 		}
 	}
 
-	async findOne(id: string) {
-		try {
-			return await this.productsRepository.findOneBy({ id: id.toString() })
-		} catch (error) {
-			this.handleDBException(error)
+	async findOne(search: string) {
+		let product: Product
+
+		if (isUUID(search)) {
+			product = await this.productsRepository.findOneBy({ id: search })
+		} else {
+			// product = await this.productsRepository.findOneBy({ slug: search })
+			const queryBuilder = this.productsRepository.createQueryBuilder()
+			product = await queryBuilder
+				.where('UPPER(title) = :title OR slug = :slug', {
+					title: search.toUpperCase(),
+					slug: search.toLowerCase()
+				})
+				.getOne()
 		}
+
+		if (!product) throw new BadRequestException(`Search ${search} not found`)
+
+		return product
 	}
 
-	update(id: number, updateProductDto: UpdateProductDto) {
+	async update(id: string, updateProductDto: UpdateProductDto) {
 		return updateProductDto
 	}
 
-	remove(id: number) {
-		return `This action removes a #${id} product`
+	async remove(id: string) {
+		const product = await this.findOne(id)
+
+		await this.productsRepository.remove(product)
 	}
 
 	private handleDBException(error: any) {
@@ -68,8 +90,4 @@ export class ProductsService {
 			'Unexpected error, check server logs'
 		)
 	}
-
-
-
-	
 }
