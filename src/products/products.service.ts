@@ -29,12 +29,26 @@ export class ProductsService {
 		}
 	}
 
-	findAll() {
-		return `This action returns all products`
+	async findAll() {
+		try {
+			const [products, count] = await this.productsRepository.findAndCount()
+			return {
+				meta: {
+					count
+				},
+				data: products
+			}
+		} catch (error) {
+			this.handleDBException(error)
+		}
 	}
 
-	findOne(id: number) {
-		return `This action returns a #${id} product`
+	async findOne(id: string) {
+		try {
+			return await this.productsRepository.findOneBy({ id: id.toString() })
+		} catch (error) {
+			this.handleDBException(error)
+		}
 	}
 
 	update(id: number, updateProductDto: UpdateProductDto) {
@@ -54,4 +68,7 @@ export class ProductsService {
 			'Unexpected error, check server logs'
 		)
 	}
+
+
+	
 }
