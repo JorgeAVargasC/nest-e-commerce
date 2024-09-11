@@ -5,13 +5,12 @@ import {
 	Logger,
 	NotFoundException
 } from '@nestjs/common'
-import { CreateProductDto } from './dto/create-product.dto'
-import { UpdateProductDto } from './dto/update-product.dto'
+import { CreateProductDto, UpdateProductDto } from './dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { Product } from './entities/product.entity'
 import { PaginationDto } from 'src/shared/dto'
 import { isUUID } from 'class-validator'
+import { Product, ProductImage } from './entities'
 
 @Injectable()
 export class ProductsService {
@@ -19,14 +18,26 @@ export class ProductsService {
 
 	constructor(
 		@InjectRepository(Product)
-		private readonly productsRepository: Repository<Product>
+		private readonly productsRepository: Repository<Product>,
+		@InjectRepository(ProductImage)
+		private readonly productsImagesRepository: Repository<ProductImage>
 	) {}
 
 	async create(createProductDto: CreateProductDto) {
+		const { images = [], ...productDetails } = createProductDto
+
 		try {
-			const product = this.productsRepository.create(createProductDto)
+			const product = this.productsRepository.create({
+				...productDetails,
+				images: images.map((image) =>
+					this.productsImagesRepository.create({ url: image })
+				)
+			})
 			await this.productsRepository.save(product)
-			return product
+			return {
+				...product,
+				images
+			}
 		} catch (error) {
 			this.handleDBException(error)
 		}
@@ -37,14 +48,20 @@ export class ProductsService {
 			const { page = 1, limit = 10 } = paginationDto
 			const [products, count] = await this.productsRepository.findAndCount({
 				take: limit,
-				skip: limit * (page - 1)
+				skip: limit * (page - 1),
+				relations: {
+					images: true
+				}
 			})
 			return {
 				meta: {
 					count,
 					totalPages: Math.ceil(count / limit)
 				},
-				data: products
+				data: products.map(({ images, ...rest }) => ({
+					...rest,
+					images: images.map((image) => image.url)
+				}))
 			}
 		} catch (error) {
 			this.handleDBException(error)
@@ -55,15 +72,18 @@ export class ProductsService {
 		let product: Product
 
 		if (isUUID(search)) {
-			product = await this.productsRepository.findOneBy({ id: search })
+			product = await this.productsRepository.findOneBy({
+				id: search
+			})
 		} else {
 			// product = await this.productsRepository.findOneBy({ slug: search })
-			const queryBuilder = this.productsRepository.createQueryBuilder()
+			const queryBuilder = this.productsRepository.createQueryBuilder('prod')
 			product = await queryBuilder
 				.where('UPPER(title) = :title OR slug = :slug', {
 					title: search.toUpperCase(),
 					slug: search.toLowerCase()
 				})
+				.leftJoinAndSelect('prod.images', 'prodImages')
 				.getOne()
 		}
 
@@ -73,10 +93,19 @@ export class ProductsService {
 		return product
 	}
 
+	async findOnePlain(search: string) {
+		const { images = [], ...rest } = await this.findOne(search)
+		return {
+			...rest,
+			images: images.map((image) => image.url)
+		}
+	}
+
 	async update(id: string, updateProductDto: UpdateProductDto) {
 		const product = await this.productsRepository.preload({
 			id,
-			...updateProductDto
+			...updateProductDto,
+			images: []
 		})
 
 		if (!product)

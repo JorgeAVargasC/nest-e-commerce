@@ -4,9 +4,11 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
+	OneToMany,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn
 } from 'typeorm'
+import { ProductImage } from './product-image.entity'
 
 @Entity()
 export class Product {
@@ -46,6 +48,21 @@ export class Product {
 		default: []
 	})
 	tags: string[]
+
+	//? https://orkhan.gitbook.io/typeorm/docs/eager-and-lazy-relations
+	// Eager relations only work when you use find* methods.
+	// If you use QueryBuilder eager relations are disabled and
+	// have to use leftJoinAndSelect to load the relation.
+	// Eager relations can only be used on one side of the
+	// relationship, using eager: true
+	// on both sides of relationship is disallowed.
+	//! eager it doesn't work with createQueryBuilder
+	//* eager it works with find* methods
+	@OneToMany(() => ProductImage, (productImage) => productImage.product, {
+		cascade: true,
+		eager: true
+	})
+	images?: ProductImage[]
 
 	@CreateDateColumn()
 	createdAt: Date
