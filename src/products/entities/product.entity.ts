@@ -1,4 +1,12 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import {
+	BeforeInsert,
+	BeforeUpdate,
+	Column,
+	CreateDateColumn,
+	Entity,
+	PrimaryGeneratedColumn,
+	UpdateDateColumn
+} from 'typeorm'
 
 @Entity()
 export class Product {
@@ -15,8 +23,7 @@ export class Product {
 	})
 	price: number
 
-	@Column({
-		type: 'text',
+	@Column('text', {
 		nullable: true
 	})
 	description: string
@@ -34,12 +41,40 @@ export class Product {
 	@Column('text')
 	gender: string
 
+	@Column('text', {
+		array: true,
+		default: []
+	})
+	tags: string[]
+
+	@CreateDateColumn()
+	createdAt: Date
+
+	@UpdateDateColumn()
+	updatedAt: Date
+
 	@BeforeInsert()
 	checkSlugInsert() {
 		if (!this.slug) {
 			this.slug = this.title
 		}
 		this.slug = this.slug
+			.toLowerCase()
+			.replaceAll(' ', '_')
+			.replaceAll('-', '_')
+			.replaceAll('.', '_')
+			.replaceAll("'", '')
+			.replaceAll('á', 'a')
+			.replaceAll('é', 'e')
+			.replaceAll('í', 'i')
+			.replaceAll('ó', 'o')
+			.replaceAll('ú', 'u')
+			.replaceAll('ñ', 'n')
+	}
+
+	@BeforeUpdate()
+	checkSlugUpdate() {
+		this.slug = this.title
 			.toLowerCase()
 			.replaceAll(' ', '_')
 			.replaceAll('-', '_')

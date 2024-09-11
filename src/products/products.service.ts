@@ -2,7 +2,8 @@ import {
 	BadRequestException,
 	Injectable,
 	InternalServerErrorException,
-	Logger
+	Logger,
+	NotFoundException
 } from '@nestjs/common'
 import { CreateProductDto } from './dto/create-product.dto'
 import { UpdateProductDto } from './dto/update-product.dto'
@@ -66,18 +67,30 @@ export class ProductsService {
 				.getOne()
 		}
 
-		if (!product) throw new BadRequestException(`Search ${search} not found`)
+		if (!product)
+			throw new BadRequestException(`Product with search ${search} not found`)
 
 		return product
 	}
 
 	async update(id: string, updateProductDto: UpdateProductDto) {
-		return updateProductDto
+		const product = await this.productsRepository.preload({
+			id,
+			...updateProductDto
+		})
+
+		if (!product)
+			throw new NotFoundException(`Product with id: ${id} not found`)
+
+		try {
+			return await this.productsRepository.save(product)
+		} catch (error) {
+			this.handleDBException(error)
+		}
 	}
 
 	async remove(id: string) {
 		const product = await this.findOne(id)
-
 		await this.productsRepository.remove(product)
 	}
 
