@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common'
 import { CreateProductDto, UpdateProductDto } from './dto'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { DataSource, Repository } from 'typeorm'
 import { PaginationDto } from 'src/shared/dto'
 import { isUUID } from 'class-validator'
 import { Product, ProductImage } from './entities'
@@ -20,7 +20,9 @@ export class ProductsService {
 		@InjectRepository(Product)
 		private readonly productsRepository: Repository<Product>,
 		@InjectRepository(ProductImage)
-		private readonly productsImagesRepository: Repository<ProductImage>
+		private readonly productsImagesRepository: Repository<ProductImage>,
+
+		private readonly dataSource: DataSource
 	) {}
 
 	async create(createProductDto: CreateProductDto) {
@@ -102,19 +104,42 @@ export class ProductsService {
 	}
 
 	async update(id: string, updateProductDto: UpdateProductDto) {
+		const { images, ...toUpdate } = updateProductDto
+
 		const product = await this.productsRepository.preload({
 			id,
-			...updateProductDto,
-			images: []
+			...toUpdate
 		})
 
 		if (!product)
 			throw new NotFoundException(`Product with id: ${id} not found`)
 
+		// Create query runner
+		const queryRunner = this.dataSource.createQueryRunner()
+		await queryRunner.connect()
+		await queryRunner.startTransaction()
+
 		try {
-			return await this.productsRepository.save(product)
+			if (images) {
+				await queryRunner.manager.delete(ProductImage, {
+					product: { id }
+				})
+				product.images = images.map((image) =>
+					this.productsImagesRepository.create({ url: image })
+				)
+			}
+
+			await queryRunner.manager.save(product)
+			await queryRunner.commitTransaction()
+
+			return this.findOnePlain(id)
+
+			// await this.productsRepository.save(product)
 		} catch (error) {
+			await queryRunner.rollbackTransaction()
 			this.handleDBException(error)
+		} finally {
+			await queryRunner.release()
 		}
 	}
 
@@ -131,5 +156,14 @@ export class ProductsService {
 		throw new InternalServerErrorException(
 			'Unexpected error, check server logs'
 		)
+	}
+
+	async deleteAllProducts() {
+		const query = this.productsRepository.createQueryBuilder('product')
+		try {
+			return await query.delete().from(Product).where({}).execute()
+		} catch (error) {
+			this.handleDBException(error)
+		}
 	}
 }

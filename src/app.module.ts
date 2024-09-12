@@ -4,6 +4,7 @@ import { AppController } from './app.controller'
 import { ProductsModule } from './products/products.module'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { envs } from './shared/config'
+import { SeedModule } from './seed/seed.module';
 
 @Module({
 	imports: [
@@ -17,7 +18,8 @@ import { envs } from './shared/config'
 			port: envs.dbPort,
 			autoLoadEntities: true,
 			synchronize: true // ! REMOVE IN PRODUCTION,
-		})
+		}),
+		SeedModule
 	],
 	controllers: [AppController],
 	providers: [AppService]
