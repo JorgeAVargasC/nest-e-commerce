@@ -4,7 +4,8 @@ import { AppController } from './app.controller'
 import { ProductsModule } from './products/products.module'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { envs } from './shared/config'
-import { SeedModule } from './seed/seed.module';
+import { SeedModule } from './seed/seed.module'
+import { FilesModule } from './files/files.module'
 
 @Module({
 	imports: [
@@ -19,7 +20,8 @@ import { SeedModule } from './seed/seed.module';
 			autoLoadEntities: true,
 			synchronize: true // ! REMOVE IN PRODUCTION,
 		}),
-		SeedModule
+		SeedModule,
+		FilesModule
 	],
 	controllers: [AppController],
 	providers: [AppService]
