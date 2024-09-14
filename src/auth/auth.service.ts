@@ -1,26 +1,79 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import {
+	BadRequestException,
+	Injectable,
+	InternalServerErrorException,
+	Logger,
+	UnauthorizedException
+} from '@nestjs/common'
+import { InjectRepository } from '@nestjs/typeorm'
+import { User } from './entities'
+import { Repository } from 'typeorm'
+
+import * as bcrypt from 'bcrypt'
+import { LoginUserDto, RegisterUserDto } from './dto'
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
+	constructor(
+		@InjectRepository(User)
+		private readonly userRepository: Repository<User>
+	) {}
 
-  findAll() {
-    return `This action returns all auth`;
-  }
+	private readonly logger = new Logger(AuthService.name)
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
+	async register(createUserDto: RegisterUserDto) {
+		try {
+			const { password, ...userData } = createUserDto
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
+			const user = this.userRepository.create({
+				...userData,
+				password: bcrypt.hashSync(password, 10)
+			})
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
-  }
+			await this.userRepository.save(user)
+
+			delete user.password
+			delete user.isActive
+
+			return user
+		} catch (error) {
+			this.handleDBErrors(error)
+		}
+	}
+
+	async login(loginUserDto: LoginUserDto) {
+		const { email, password } = loginUserDto
+
+		const user = await this.userRepository.findOne({
+			where: { email },
+			select: { email: true, password: true }
+		})
+
+		if (!user)
+			throw new UnauthorizedException('Credentials are not valid (email)')
+
+		if (!bcrypt.compareSync(password, user.password)) {
+			throw new UnauthorizedException('Credentials are not valid (password)')
+		}
+
+		return user
+	}
+
+	validateToken(id: number) {
+		return `This action returns a #${id} auth`
+	}
+
+	refreshToken(id: number, loginUserDto: LoginUserDto) {
+		return `This action updates a #${id} auth ${JSON.stringify(loginUserDto)}`
+	}
+
+	private handleDBErrors(error: any): never {
+		if (error.code === '23505') {
+			this.logger.error(error.detail)
+			throw new BadRequestException(error.detail)
+		}
+
+		this.logger.error(error)
+		throw new InternalServerErrorException('Please check server logs')
+	}
 }
