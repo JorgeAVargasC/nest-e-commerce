@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { envs } from './shared/config'
 import { SeedModule } from './seed/seed.module'
 import { FilesModule } from './files/files.module'
+import { AuthModule } from './auth/auth.module';
 
 @Module({
 	imports: [
@@ -21,7 +22,8 @@ import { FilesModule } from './files/files.module'
 			synchronize: true // ! REMOVE IN PRODUCTION,
 		}),
 		SeedModule,
-		FilesModule
+		FilesModule,
+		AuthModule
 	],
 	controllers: [AppController],
 	providers: [AppService]
