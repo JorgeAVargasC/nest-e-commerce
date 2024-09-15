@@ -15,7 +15,7 @@ export class User {
 	})
 	password: string
 
-	@Column()
+	@Column('text')
 	fullName: string
 
 	@Column('bool', {
