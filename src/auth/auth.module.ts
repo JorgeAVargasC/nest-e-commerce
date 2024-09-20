@@ -6,7 +6,7 @@ import { User } from './entities'
 import { PassportModule } from '@nestjs/passport'
 import { JwtModule } from '@nestjs/jwt'
 import { envs } from 'src/shared/config'
-
+import { JwtStrategy } from './strategies/jwt.strategy'
 @Module({
 	controllers: [AuthController],
 	imports: [
@@ -17,7 +17,7 @@ import { envs } from 'src/shared/config'
 			signOptions: { expiresIn: '1h' }
 		})
 	],
-	providers: [AuthService],
-	exports: [TypeOrmModule]
+	providers: [AuthService, JwtStrategy],
+	exports: [TypeOrmModule, JwtStrategy, PassportModule, JwtModule]
 })
 export class AuthModule {}

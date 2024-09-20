@@ -11,12 +11,16 @@ import { Repository } from 'typeorm'
 
 import * as bcrypt from 'bcrypt'
 import { LoginUserDto, RegisterUserDto } from './dto'
+import { IJwtPayload } from './interfaces'
+import { JwtService } from '@nestjs/jwt'
 
 @Injectable()
 export class AuthService {
 	constructor(
 		@InjectRepository(User)
-		private readonly userRepository: Repository<User>
+		private readonly userRepository: Repository<User>,
+
+		private readonly jwtService: JwtService
 	) {}
 
 	private readonly logger = new Logger(AuthService.name)
@@ -56,7 +60,14 @@ export class AuthService {
 			throw new UnauthorizedException('Credentials are not valid (password)')
 		}
 
-		return user
+		return {
+			user,
+			token: this.getJwtToken({
+				email: user.email,
+				userId: user.id,
+				username: user.fullName
+			})
+		}
 	}
 
 	validateToken(id: number) {
@@ -65,6 +76,10 @@ export class AuthService {
 
 	refreshToken(id: number, loginUserDto: LoginUserDto) {
 		return `This action updates a #${id} auth ${JSON.stringify(loginUserDto)}`
+	}
+
+	private getJwtToken(payload: IJwtPayload) {
+		return this.jwtService.sign(payload)
 	}
 
 	private handleDBErrors(error: any): never {
