@@ -11,42 +11,79 @@ import {
 } from 'typeorm'
 import { ProductImage } from './product-image.entity'
 import { User } from 'src/auth/entities'
+import { ApiProperty } from '@nestjs/swagger'
 
 @Entity({
 	name: 'products'
 })
 export class Product {
+	@ApiProperty({
+		example: 'd0f8a9d0-6a0c-4b2b-9b2f-1b2f1b2f1b2f',
+		description: 'Product ID',
+		uniqueItems: true
+	})
 	@PrimaryGeneratedColumn('uuid')
 	id: string
 
+	@ApiProperty({
+		example: 'T-Shirt',
+		description: 'Product title',
+		uniqueItems: true
+	})
 	@Column('text', {
 		unique: true
 	})
 	title: string
 
+	@ApiProperty({
+		example: 0,
+		description: 'Product price'
+	})
 	@Column('float', {
 		default: 0
 	})
 	price: number
 
+	@ApiProperty({
+		example: 'lorem ipsum',
+		description: 'Product description',
+		default: null,
+		nullable: true
+	})
 	@Column('text', {
 		nullable: true
 	})
 	description: string
 
+	@ApiProperty({
+		example: 't_shirt',
+		description: 'Product slug',
+		uniqueItems: true
+	})
 	@Column('text', {
 		unique: true
 	})
 	slug: string
 
+	@ApiProperty({
+		example: ['S', 'M', 'XL', 'XXL'],
+		description: 'Product sizes'
+	})
 	@Column('text', {
 		array: true
 	})
 	sizes: string[]
 
+
+	@ApiProperty({
+		example: 'women',
+		description: 'Product gender'
+	})
+	@ApiProperty()
 	@Column('text')
 	gender: string
 
+	@ApiProperty()
 	@Column('text', {
 		array: true,
 		default: []

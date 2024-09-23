@@ -57,14 +57,14 @@ DB_HOST=
 > [!NOTE]
 > Useful information that users should know, even when skimming content.
 
-<!-- > [!TIP]
+> [!TIP]
 > Helpful advice for doing things better or more easily.
 
 > [!IMPORTANT]
 > Key information users need to know to achieve their goal.
 
 > [!WARNING]
-> Urgent info that needs immediate user attention to avoid problems. -->
+> Urgent info that needs immediate user attention to avoid problems.
 
 > [!CAUTION]
 > Only use this if you know what you're doing. only in dev mode
