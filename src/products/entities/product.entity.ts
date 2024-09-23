@@ -4,11 +4,13 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
+	ManyToOne,
 	OneToMany,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn
 } from 'typeorm'
 import { ProductImage } from './product-image.entity'
+import { User } from 'src/auth/entities'
 
 @Entity({
 	name: 'products'
@@ -59,12 +61,15 @@ export class Product {
 	// relationship, using eager: true
 	// on both sides of relationship is disallowed.
 	//! eager it doesn't work with createQueryBuilder
-	//* eager it works with find* methods
+	//* eager it works with find* methods, load automatically
 	@OneToMany(() => ProductImage, (productImage) => productImage.product, {
 		cascade: true,
 		eager: true
 	})
 	images?: ProductImage[]
+
+	@ManyToOne(() => User, (user) => user.products, { eager: true })
+	user: User
 
 	@CreateDateColumn()
 	createdAt: Date

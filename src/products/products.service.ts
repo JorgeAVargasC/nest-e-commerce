@@ -11,6 +11,7 @@ import { DataSource, Repository } from 'typeorm'
 import { PaginationDto } from 'src/shared/dto'
 import { isUUID } from 'class-validator'
 import { Product, ProductImage } from './entities'
+import { User } from '../auth/entities'
 
 @Injectable()
 export class ProductsService {
@@ -25,7 +26,7 @@ export class ProductsService {
 		private readonly dataSource: DataSource
 	) {}
 
-	async create(createProductDto: CreateProductDto) {
+	async create(createProductDto: CreateProductDto, user: User) {
 		const { images = [], ...productDetails } = createProductDto
 
 		try {
@@ -33,7 +34,8 @@ export class ProductsService {
 				...productDetails,
 				images: images.map((image) =>
 					this.productsImagesRepository.create({ url: image })
-				)
+				),
+				user
 			})
 			await this.productsRepository.save(product)
 			return {
@@ -103,7 +105,7 @@ export class ProductsService {
 		}
 	}
 
-	async update(id: string, updateProductDto: UpdateProductDto) {
+	async update(id: string, updateProductDto: UpdateProductDto, user: User) {
 		const { images, ...toUpdate } = updateProductDto
 
 		const product = await this.productsRepository.preload({
@@ -128,6 +130,8 @@ export class ProductsService {
 					this.productsImagesRepository.create({ url: image })
 				)
 			}
+
+			product.user = user
 
 			await queryRunner.manager.save(product)
 			await queryRunner.commitTransaction()
