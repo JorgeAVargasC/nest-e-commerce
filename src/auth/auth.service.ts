@@ -65,9 +65,7 @@ export class AuthService {
 		return {
 			user,
 			token: this.getJwtToken({
-				email: user.email,
-				id: user.id,
-				fullName: user.fullName
+				id: user.id
 			})
 		}
 	}
@@ -76,8 +74,13 @@ export class AuthService {
 		return `This action returns a #${id} auth`
 	}
 
-	refreshToken(id: number, loginUserDto: LoginUserDto) {
-		return `This action updates a #${id} auth ${JSON.stringify(loginUserDto)}`
+	refreshToken(user: User) {
+		return {
+			...user,
+			token: this.getJwtToken({
+				id: user.id
+			})
+		}
 	}
 
 	private getJwtToken(payload: IJwtPayload) {

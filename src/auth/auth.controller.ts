@@ -3,7 +3,6 @@ import {
 	Get,
 	Post,
 	Body,
-	Patch,
 	Param,
 	UseGuards,
 	Headers
@@ -36,9 +35,10 @@ export class AuthController {
 		return this.authService.validateToken(+id)
 	}
 
-	@Patch('refresh/:id')
-	refreshToken(@Param('id') id: string, @Body() loginUserDto: LoginUserDto) {
-		return this.authService.refreshToken(+id, loginUserDto)
+	@Get('refresh-token')
+	@Auth()
+	refreshToken(@GetUser() user: User) {
+		return this.authService.refreshToken(user)
 	}
 
 	// private route
