@@ -6,7 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { envs } from './shared/config'
 import { SeedModule } from './seed/seed.module'
 import { FilesModule } from './files/files.module'
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './auth/auth.module'
+import { ChatsModule } from './chats/chats.module'
 
 @Module({
 	imports: [
@@ -23,7 +24,8 @@ import { AuthModule } from './auth/auth.module';
 		}),
 		SeedModule,
 		FilesModule,
-		AuthModule
+		AuthModule,
+		ChatsModule
 	],
 	controllers: [AppController],
 	providers: [AppService]

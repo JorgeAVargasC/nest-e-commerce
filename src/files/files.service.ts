@@ -9,7 +9,7 @@ export class FilesService {
 			const result = await cloudinary.uploader.upload(base64file, {
 				public_id: file.filename
 			})
-      console.log(result)
+			console.log(result)
 
 			const optimizeUrl = cloudinary.url(result.public_id, {
 				transformation: [

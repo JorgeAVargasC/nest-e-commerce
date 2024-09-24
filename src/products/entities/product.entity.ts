@@ -74,7 +74,6 @@ export class Product {
 	})
 	sizes: string[]
 
-
 	@ApiProperty({
 		example: 'women',
 		description: 'Product gender'
