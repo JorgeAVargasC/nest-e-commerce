@@ -33,7 +33,7 @@ DB_HOST=
 3. Start the database container
 
 ```bash
-  docker-compose up -d
+  docker compose up -d
 ```
 
 4. Install dependencies

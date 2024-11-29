@@ -3,7 +3,6 @@ import {
 	Get,
 	Post,
 	Body,
-	Param,
 	UseGuards,
 	Headers
 } from '@nestjs/common'
@@ -32,9 +31,10 @@ export class AuthController {
 		return this.authService.login(loginUserDto)
 	}
 
-	@Get('validate/:id')
-	validateToken(@Param('id') id: string) {
-		return this.authService.validateToken(+id)
+	@Get('validate-token')
+	@Auth()
+	validateToken() {
+		return this.authService.validateToken()
 	}
 
 	@Get('refresh-token')

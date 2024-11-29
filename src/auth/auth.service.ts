@@ -50,7 +50,14 @@ export class AuthService {
 
 		const user = await this.userRepository.findOne({
 			where: { email },
-			select: { email: true, id: true, password: true, fullName: true }
+			select: {
+				email: true,
+				password: true,
+				roles: true,
+				id: true,
+				fullName: true,
+				isActive: true
+			}
 		})
 
 		if (!user)
@@ -70,13 +77,13 @@ export class AuthService {
 		}
 	}
 
-	validateToken(id: number) {
-		return `This action returns a #${id} auth`
+	validateToken() {
+		return 'Valid Token'
 	}
 
 	refreshToken(user: User) {
 		return {
-			...user,
+			user,
 			token: this.getJwtToken({
 				id: user.id
 			})
